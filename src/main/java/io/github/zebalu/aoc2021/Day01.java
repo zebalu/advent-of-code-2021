@@ -11,19 +11,15 @@ public class Day01 {
     }
 
     private static void firstPart(List<Integer> readings) {
-        System.out.println(countIncrease(readings));
+        System.out.println(countIncrease(readings, 1));
     }
 
     private static void secondPart(List<Integer> readings) {
-        System.out.println(countIncrease(convertToTripletSums(readings)));
+        System.out.println(countIncrease(readings, 3));
     }
 
-    private static long countIncrease(List<Integer> list) {
-        return IntStream.range(1, list.size()).filter(i -> list.get(i) > list.get(i - 1)).count();
-    }
-
-    private static List<Integer> convertToTripletSums(List<Integer> list) {
-        return IntStream.range(2, list.size()).mapToObj(i -> list.get(i - 2) + list.get(i - 1) + list.get(i)).toList();
+    private static long countIncrease(List<Integer> list, int window) {
+        return IntStream.range(window, list.size()).filter(i -> list.get(i) > list.get(i - window)).count();
     }
 
     private static final String INPUT = """
