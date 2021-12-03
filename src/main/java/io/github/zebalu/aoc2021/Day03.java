@@ -1,15 +1,16 @@
 package io.github.zebalu.aoc2021;
 
+import java.util.List;
 import java.util.function.BiFunction;
 
 public class Day03 {
     public static void main(String[] args) {
-        firstPart();
-        secondPart();
+        var numList = INPUT.lines().toList();
+        firstPart(numList);
+        secondPart(numList);
     }
 
-    private static void firstPart() {
-        var numsAsBits = INPUT.lines().toList();
+    private static void firstPart(List<String> numsAsBits) {
         StringBuilder gammaBuilder = new StringBuilder();
         StringBuilder epsilonBuilder = new StringBuilder();
         for (int i = 0; i < numsAsBits.get(0).length(); ++i) {
@@ -29,20 +30,20 @@ public class Day03 {
         System.out.println(gamma * epsilon);
     }
 
-    private static void secondPart() {
-        int oxygen = findInBits((ones, zeros) -> ones >= zeros ? '1' : '0');
-        int carbonDioxyd = findInBits((ones, zeros) -> ones >= zeros ? '0' : '1');
-        System.out.println(oxygen * carbonDioxyd);
+    private static void secondPart(List<String> numList) {
+        int oxygen        = findInBits(numList, (ones, zeros) -> ones >= zeros ? '1' : '0');
+        int carbonDioxide = findInBits(numList, (ones, zeros) -> ones >= zeros ? '0' : '1');
+        System.out.println(oxygen * carbonDioxide);
     }
 
-    private static int findInBits(BiFunction<Integer, Integer, Character> bit) {
-        var numsAsBits = INPUT.lines().toList();
+    private static int findInBits(List<String> numList, BiFunction<Integer, Integer, Character> bitSelector) {
+        var numsAsBits = numList;
         for (int i = 0; i < numsAsBits.get(0).length() && numsAsBits.size() > 1; ++i) {
             int j = i;
             int oneCount = (int) numsAsBits.stream().filter(s -> s.charAt(j) == '1').count();
             int zeroCount = numsAsBits.size() - oneCount;
-            char c = bit.apply(oneCount, zeroCount);
-            numsAsBits = numsAsBits.stream().filter(s -> s.charAt(j) == c).toList();
+            char expectedChar = bitSelector.apply(oneCount, zeroCount);
+            numsAsBits = numsAsBits.stream().filter(s -> s.charAt(j) == expectedChar).toList();
         }
         return Integer.parseInt(numsAsBits.get(0), 2);
     }
