@@ -2,6 +2,7 @@ package io.github.zebalu.aoc2021;
 
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 public class Day03 {
     public static void main(String[] args) {
@@ -22,13 +23,16 @@ public class Day03 {
         System.out.println(oxygen * carbonDioxide);
     }
 
+    private static int[] countZeroOneAtPosition(List<String> numsAsBits, int position) {
+        int ones = (int) numsAsBits.stream().filter(s -> s.charAt(position) == '1').count();
+        return new int[] { numsAsBits.size() - ones, ones };
+    }
+
     private static int getIntByFunction(List<String> numsAsBits, BiFunction<Integer, Integer, Character> function) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < numsAsBits.get(0).length(); ++i) {
-            int j = i;
-            int oneCount = (int) numsAsBits.stream().filter(s -> s.charAt(j) == '1').count();
-            int zeroCount = numsAsBits.size() - oneCount;
-            builder.append(function.apply(oneCount, zeroCount));
+            int[] zerosOnes = countZeroOneAtPosition(numsAsBits, i);
+            builder.append(function.apply(zerosOnes[0], zerosOnes[1]));
         }
         return Integer.parseInt(builder.toString(), 2);
     }
@@ -36,23 +40,24 @@ public class Day03 {
     private static int findInBits(List<String> numList, BiFunction<Integer, Integer, Character> bitSelector) {
         var numsAsBits = numList;
         for (int i = 0; i < numsAsBits.get(0).length() && numsAsBits.size() > 1; ++i) {
-            int j = i;
-            int oneCount = (int) numsAsBits.stream().filter(s -> s.charAt(j) == '1').count();
-            int zeroCount = numsAsBits.size() - oneCount;
-            char expectedChar = bitSelector.apply(oneCount, zeroCount);
-            numsAsBits = numsAsBits.stream().filter(s -> s.charAt(j) == expectedChar).toList();
+            int[] zerosOnes = countZeroOneAtPosition(numsAsBits, i);
+            numsAsBits = numsAsBits.stream().filter(equalsOnPosition(i, bitSelector.apply(zerosOnes[0], zerosOnes[1]))).toList();
         }
         return Integer.parseInt(numsAsBits.get(0), 2);
     }
 
-    private static final char bigger(int ones, int zeros) {
+    private static final char bigger(int zeros, int ones) {
         return ones >= zeros ? '1' : '0';
     }
 
-    private static final char smaller(int ones, int zeros) {
+    private static final char smaller(int zeros, int ones) {
         return ones >= zeros ? '0' : '1';
     }
 
+    private static Predicate<String> equalsOnPosition(int position, char expectedChar) {
+        return s -> s.charAt(position) == expectedChar;
+    }
+    
     private static final String INPUT = """
             100000101101
             011011010101
