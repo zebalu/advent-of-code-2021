@@ -44,7 +44,7 @@ public class Day03 {
             char c = bit.apply(oneCount, zeroCount);
             numsAsBits = numsAsBits.stream().filter(s -> s.charAt(j) == c).toList();
         }
-        return Integer.parseInt(numsAsBits.get(0).toString(), 2);
+        return Integer.parseInt(numsAsBits.get(0), 2);
     }
 
     private static final String INPUT = """
