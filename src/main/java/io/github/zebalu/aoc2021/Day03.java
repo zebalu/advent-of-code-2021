@@ -11,29 +11,26 @@ public class Day03 {
     }
 
     private static void firstPart(List<String> numsAsBits) {
-        StringBuilder gammaBuilder = new StringBuilder();
-        StringBuilder epsilonBuilder = new StringBuilder();
-        for (int i = 0; i < numsAsBits.get(0).length(); ++i) {
-            int j = i;
-            int oneCount = (int) numsAsBits.stream().filter(s -> s.charAt(j) == '1').count();
-            int zeroCount = numsAsBits.size() - oneCount;
-            if (oneCount > zeroCount) {
-                gammaBuilder.append('1');
-                epsilonBuilder.append('0');
-            } else {
-                gammaBuilder.append('0');
-                epsilonBuilder.append('1');
-            }
-        }
-        int gamma = Integer.parseInt(gammaBuilder.toString(), 2);
-        int epsilon = Integer.parseInt(epsilonBuilder.toString(), 2);
+        int gamma   = getIntByFunction(numsAsBits, Day03::bigger);
+        int epsilon = getIntByFunction(numsAsBits, Day03::smaller);
         System.out.println(gamma * epsilon);
     }
 
     private static void secondPart(List<String> numList) {
-        int oxygen        = findInBits(numList, (ones, zeros) -> ones >= zeros ? '1' : '0');
-        int carbonDioxide = findInBits(numList, (ones, zeros) -> ones >= zeros ? '0' : '1');
+        int oxygen        = findInBits(numList, Day03::bigger);
+        int carbonDioxide = findInBits(numList, Day03::smaller);
         System.out.println(oxygen * carbonDioxide);
+    }
+
+    private static int getIntByFunction(List<String> numsAsBits, BiFunction<Integer, Integer, Character> function) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < numsAsBits.get(0).length(); ++i) {
+            int j = i;
+            int oneCount = (int) numsAsBits.stream().filter(s -> s.charAt(j) == '1').count();
+            int zeroCount = numsAsBits.size() - oneCount;
+            builder.append(function.apply(oneCount, zeroCount));
+        }
+        return Integer.parseInt(builder.toString(), 2);
     }
 
     private static int findInBits(List<String> numList, BiFunction<Integer, Integer, Character> bitSelector) {
@@ -46,6 +43,14 @@ public class Day03 {
             numsAsBits = numsAsBits.stream().filter(s -> s.charAt(j) == expectedChar).toList();
         }
         return Integer.parseInt(numsAsBits.get(0), 2);
+    }
+
+    private static final char bigger(int ones, int zeros) {
+        return ones >= zeros ? '1' : '0';
+    }
+
+    private static final char smaller(int ones, int zeros) {
+        return ones >= zeros ? '0' : '1';
     }
 
     private static final String INPUT = """
