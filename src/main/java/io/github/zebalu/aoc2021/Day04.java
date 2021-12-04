@@ -3,8 +3,7 @@ package io.github.zebalu.aoc2021;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,32 +34,40 @@ public class Day04 {
 
     private static void firstPart(int[] draw, List<Board> boards) {
         boolean winningfound = false;
+        Board lastChecked = null;
+        int lastDrawn = -1;
         for (int i = 0; i < draw.length && !winningfound; ++i) {
+            lastDrawn = draw[i];
             for (int j = 0; j < boards.size() && !winningfound; ++j) {
-                winningfound = boards.get(j).draw(draw[i]);
-                if (winningfound) {
-                    System.out.println(boards.get(j).score(draw[i]));
-                    return;
-                }
+                lastChecked = boards.get(j);
+                winningfound = lastChecked.draw(lastDrawn);
             }
         }
+        System.out.println(lastChecked.score(lastDrawn));
     }
 
     private static void secondPart(int[] draw, List<Board> startBoards) {
         var boards = new ArrayList<>(startBoards);
+        Board latestWinner = null;
+        int lastDrawn = -1;
         for (int i = 0; i < draw.length && !boards.isEmpty(); ++i) {
-            Iterator<Board> bi = boards.iterator();
-            while (bi.hasNext()) {
-                var lastB = bi.next();
-                if (lastB.draw(draw[i])) {
-                    bi.remove();
-                    if (boards.isEmpty()) {
-                        System.out.println(lastB.score(draw[i]));
-                        return;
-                    }
-                }
+            lastDrawn = draw[i];
+            latestWinner = drawOnAllBoards(boards, lastDrawn);
+        }
+        System.out.println(latestWinner.score(lastDrawn));
+    }
+
+    private static Board drawOnAllBoards(ArrayList<Board> boards, int drawn) {
+        var boarditerator = boards.iterator();
+        Board winner = null;
+        while (boarditerator.hasNext()) {
+            var lastB = boarditerator.next();
+            if (lastB.draw(drawn)) {
+                winner = lastB;
+                boarditerator.remove();
             }
         }
+        return winner;
     }
 
     private static record Coord(int x, int y) {
@@ -72,7 +79,7 @@ public class Day04 {
                 .compile("\\s*(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
 
         Map<Coord, Integer> boardNums = new HashMap<>();
-        Set<Integer> drawn = new LinkedHashSet<>();
+        Set<Integer> drawn = new HashSet<>();
 
         Board(List<String> input) {
             for (int x = 0; x < input.size(); ++x) {
@@ -91,24 +98,21 @@ public class Day04 {
             return isWinning();
         }
 
-        private boolean isWinning() {
-            boolean winningFound = false;
-            for (int i = 0; i < 5 && !winningFound; ++i) {
-                int ii = i;
-                winningFound = IntStream.range(0, 5).mapToObj(j -> drawn.contains(get(ii, j))).reduce(true,
-                        (a, v) -> a && v);
-            }
-            for (int j = 0; j < 5 && !winningFound; ++j) {
-                int jj = j;
-                winningFound = IntStream.range(0, 5).mapToObj(i -> drawn.contains(get(i, jj))).reduce(true,
-                        (a, v) -> a && v);
-            }
-            return winningFound;
-        }
-
         int score(int last) {
             int sum = boardNums.values().stream().filter(v -> !drawn.contains(v)).mapToInt(Integer::intValue).sum();
             return sum * last;
+        }
+
+        private boolean isWinning() {
+            return IntStream.range(0, 5).anyMatch(i -> allMatchInRow(i) || allMatchInColumn(i));
+        }
+
+        private boolean allMatchInRow(int row) {
+            return IntStream.range(0, 5).allMatch(j -> drawn.contains(get(row, j)));
+        }
+
+        private boolean allMatchInColumn(int col) {
+            return IntStream.range(0, 5).allMatch(i -> drawn.contains(get(i, col)));
         }
 
         private int get(int x, int y) {
