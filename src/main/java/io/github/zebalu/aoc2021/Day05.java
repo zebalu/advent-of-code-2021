@@ -58,15 +58,11 @@ public class Day05 {
         }
 
         int length() {
-            if (fromX == toX) {
-                return Math.abs(fromY - toY);
-            } else if (fromY == toY) {
-                return Math.abs(fromX - toX);
-            } else if (isDiagonal()) {
-                return Math.abs(fromX - toX);
-            } else {
-                throw new IllegalStateException("can not calc length of: " + this);
+            int manhattanDistance = Math.abs(fromX - toX) + Math.abs(fromY - toY);
+            if (isDiagonal()) {
+                return manhattanDistance / 2;
             }
+            return manhattanDistance;
         }
 
         static Line read(String line) {
