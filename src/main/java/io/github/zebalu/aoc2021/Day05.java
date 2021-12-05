@@ -65,7 +65,7 @@ public class Day05 {
         }
 
         boolean isVerticalOrHorizontalOrDiagonal() {
-            return isVerticalOrHorizontal() || isDiagonal();// (fromX==toY && fromY==toX);
+            return isVerticalOrHorizontal() || isDiagonal();
         }
 
         boolean isDiagonal() {
