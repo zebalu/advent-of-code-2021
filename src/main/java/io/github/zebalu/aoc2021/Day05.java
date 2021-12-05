@@ -18,34 +18,17 @@ public class Day05 {
 
     private static void secondPart() {
         Map<Coord, Integer> coords = new HashMap<>();
-        INPUT.lines().map(Line::read).filter(Line::isVerticalOrHorizontalOrDiagonal).forEach(line -> addCoords(coords, line));
+        INPUT.lines().map(Line::read).filter(Line::isVerticalOrHorizontalOrDiagonal)
+                .forEach(line -> addCoords(coords, line));
         System.out.println(coords.values().stream().filter(v -> v > 1).count());
     }
 
     private static void addCoords(Map<Coord, Integer> coords, Line line) {
-        int minX = Math.min(line.fromX, line.toX);
-        int maxX = Math.max(line.fromX, line.toX);
-        int minY = Math.min(line.fromY, line.toY);
-        int maxY = Math.max(line.fromY, line.toY);
-        if (line.isVerticalOrHorizontal()) {
-            if (line.fromX == line.toX) {
-                for (int y = minY; y <= maxY; ++y) {
-                    saveCoord(new Coord(line.fromX, y), coords);
-                }
-            } else {
-                for (int x = minX; x <= maxX; ++x) {
-                    saveCoord(new Coord(x, line.fromY), coords);
-                }
-            }
-        } else {
-            boolean isMainDiagonal = line.isMainDiagonal();
-            for (int diff = 0; diff <= maxX - minX; ++diff) {
-                if (isMainDiagonal) {
-                    saveCoord(new Coord(minX + diff, minY + diff), coords);
-                } else {
-                    saveCoord(new Coord(minX + diff, maxY - diff), coords);
-                }
-            }
+        Coord step = new Coord((int) Math.signum(line.toX - line.fromX), (int) Math.signum(line.toY - line.fromY));
+        Coord current = new Coord(line.fromX, line.fromY);
+        for (int i = 0; i <= line.length(); ++i) {
+            saveCoord(current, coords);
+            current = current.plus(step);
         }
     }
 
@@ -54,7 +37,9 @@ public class Day05 {
     }
 
     private static final record Coord(int x, int y) {
-
+        Coord plus(Coord coord) {
+            return new Coord(x + coord.x, y + coord.y);
+        }
     }
 
     private static record Line(int fromX, int fromY, int toX, int toY) {
@@ -72,8 +57,16 @@ public class Day05 {
             return Math.abs(fromX - toX) == Math.abs(fromY - toY);
         }
 
-        boolean isMainDiagonal() {
-            return isDiagonal() && ((fromX < toX && fromY < toY) || toX < fromX && toY < fromY);
+        int length() {
+            if (fromX == toX) {
+                return Math.abs(fromY - toY);
+            } else if (fromY == toY) {
+                return Math.abs(fromX - toX);
+            } else if (isDiagonal()) {
+                return Math.abs(fromX - toX);
+            } else {
+                throw new IllegalStateException("can not calc length of: " + this);
+            }
         }
 
         static Line read(String line) {
