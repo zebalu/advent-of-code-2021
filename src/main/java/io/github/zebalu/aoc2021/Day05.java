@@ -3,6 +3,7 @@ package io.github.zebalu.aoc2021;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class Day05 {
     public static void main(String[] args) {
@@ -25,11 +26,8 @@ public class Day05 {
 
     private static void addCoords(Map<Coord, Integer> coords, Line line) {
         Coord step = new Coord((int) Math.signum(line.toX - line.fromX), (int) Math.signum(line.toY - line.fromY));
-        Coord current = new Coord(line.fromX, line.fromY);
-        for (int i = 0; i <= line.length(); ++i) {
-            saveCoord(current, coords);
-            current = current.plus(step);
-        }
+        Stream.iterate(new Coord(line.fromX, line.fromY), coord -> coord.plus(step)).limit(line.length())
+                .forEach(coord -> saveCoord(coord, coords));
     }
 
     private static void saveCoord(Coord coord, Map<Coord, Integer> coords) {
@@ -60,9 +58,9 @@ public class Day05 {
         int length() {
             int manhattanDistance = Math.abs(fromX - toX) + Math.abs(fromY - toY);
             if (isDiagonal()) {
-                return manhattanDistance / 2;
+                return manhattanDistance / 2 + 1;
             }
-            return manhattanDistance;
+            return manhattanDistance + 1;
         }
 
         static Line read(String line) {
