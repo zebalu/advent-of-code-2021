@@ -28,10 +28,10 @@ public class Day06 {
             return cache.get(fs);
         }
         long sum = 1L;
-        int rc = steps - fish;
-        while (rc > 0) {
-            sum += repoductionsOf(9, rc, cache);
-            rc -= 7;
+        int remainingSteps = steps - fish;
+        while (remainingSteps > 0) {
+            sum += repoductionsOf(9, remainingSteps, cache);
+            remainingSteps -= 7;
         }
         cache.put(fs, sum);
         return sum;
