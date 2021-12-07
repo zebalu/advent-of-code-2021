@@ -7,26 +7,27 @@ import java.util.stream.IntStream;
 public class Day07 {
     public static void main(String[] args) {
         var positions = Arrays.stream(INPUT.split(",")).mapToInt(Integer::parseInt).toArray();
-        firstPart(positions);
-        secondPart(positions);
+        int min = IntStream.of(positions).min().orElseThrow();
+        int max= IntStream.of(positions).max().orElseThrow();
+        firstPart(positions, min, max);
+        secondPart(positions,min, max);
     }
 
-    private static void firstPart(int[] positions) {
-        System.out.println(minAlignment(positions, i -> i));
+    private static void firstPart(int[] positions, int min, int max) {
+        System.out.println(minAlignment(positions, min, max, i -> i));
     }
 
-    private static void secondPart(int[] positions) {
-        System.out.println(minAlignment(positions, i -> (i + 1) * i / 2));
+    private static void secondPart(int[] positions, int min, int max) {
+        System.out.println(minAlignment(positions, min, max, i -> (i + 1) * i / 2));
     }
 
-    private static int minAlignment(int[] positions, IntUnaryOperator converter) {
-        return IntStream.range(0, positions.length).map(target -> costOfPosition(target, positions, converter)).min()
+    private static int minAlignment(int[] positions, int min, int max, IntUnaryOperator converter) {
+        return IntStream.range(min, max).map(target -> costOfPosition(target, positions, converter)).min()
                 .orElseThrow();
     }
 
     private static int costOfPosition(int target, int[] positions, IntUnaryOperator converter) {
-        return IntStream.range(0, positions.length)
-                .map(i -> converter.applyAsInt(Math.abs(positions[target] - positions[i]))).sum();
+        return IntStream.of(positions).map(i -> converter.applyAsInt(Math.abs(target - i))).sum();
     }
 
     private static final String INPUT = """
