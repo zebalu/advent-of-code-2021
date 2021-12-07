@@ -22,7 +22,7 @@ public class Day07 {
     }
 
     private static int minAlignment(int[] positions, int min, int max, IntUnaryOperator converter) {
-        return IntStream.range(min, max).map(target -> costOfPosition(target, positions, converter)).min()
+        return IntStream.rangeClosed(min, max).map(target -> costOfPosition(target, positions, converter)).min()
                 .orElseThrow();
     }
 
