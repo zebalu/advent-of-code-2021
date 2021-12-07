@@ -8,9 +8,9 @@ public class Day07 {
     public static void main(String[] args) {
         var positions = Arrays.stream(INPUT.split(",")).mapToInt(Integer::parseInt).toArray();
         int min = IntStream.of(positions).min().orElseThrow();
-        int max= IntStream.of(positions).max().orElseThrow();
+        int max = IntStream.of(positions).max().orElseThrow();
         firstPart(positions, min, max);
-        secondPart(positions,min, max);
+        secondPart(positions, min, max);
     }
 
     private static void firstPart(int[] positions, int min, int max) {
