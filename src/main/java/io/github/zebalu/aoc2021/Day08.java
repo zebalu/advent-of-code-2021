@@ -58,7 +58,7 @@ public class Day08 {
         Map<String, Integer> result = new HashMap<>();
         keys.forEach(key -> result.put(key, byLength(key)));
         keys.forEach(key -> lengthMap.computeIfAbsent(key.length(), k -> new ArrayList<>()).add(key));
-        String nine = findNine(lengthMap.get(6), lengthMap.get(4).get(0) + lengthMap.get(2).get(0));// +upperLine+lowerLine);
+        String nine = findNine(lengthMap.get(6), lengthMap.get(4).get(0) + lengthMap.get(2).get(0));
         result.put(nine, 9);
         String six = findSix(lengthMap.get(6), nine, lengthMap.get(2).get(0));
         result.put(six, 6);
