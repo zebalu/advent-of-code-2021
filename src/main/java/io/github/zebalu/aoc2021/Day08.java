@@ -1,6 +1,5 @@
 package io.github.zebalu.aoc2021;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -54,24 +53,42 @@ public class Day08 {
     private static Map<String, Integer> decodeMap(String line) {
         var parts = line.split(SEPARATOR);
         var keys = Arrays.stream(parts[0].split(" ")).map(Day08::arrange).toList();
-        Map<Integer, List<String>> lengthMap = new HashMap<>();
+        Map<Integer, List<String>> lengthMap = groupByLength(keys);
+        Map<String, Integer> result = decodeEasyNums(keys);
+        String six = deduceZeroSixNine(result, lengthMap.get(6), lengthMap.get(2).get(0), lengthMap.get(4).get(0));
+        deduceTwoThreeFive(result, lengthMap.get(5), lengthMap.get(2).get(0), six);
+        return result;
+    }
+    
+    private static Map<String, Integer> decodeEasyNums(List<String> keys) {
         Map<String, Integer> result = new HashMap<>();
         keys.forEach(key -> result.put(key, byLength(key)));
-        keys.forEach(key -> lengthMap.computeIfAbsent(key.length(), k -> new ArrayList<>()).add(key));
-        String nine = findNine(lengthMap.get(6), lengthMap.get(4).get(0) + lengthMap.get(2).get(0));
+        return result;
+    }
+
+    private static String deduceZeroSixNine(Map<String, Integer> result, List<String> zeroSixNine, String one,
+            String four) {
+        String nine = findNine(zeroSixNine, four + one);
         result.put(nine, 9);
-        String six = findSix(lengthMap.get(6), nine, lengthMap.get(2).get(0));
+        String six = findSix(zeroSixNine, nine, one);
         result.put(six, 6);
-        String zero = findZero(lengthMap.get(6), six, nine);
-        result.put(zero, 0);
-        String three = findThree(lengthMap.get(5), lengthMap.get(2).get(0));
+        result.put(findZero(zeroSixNine, six, nine), 0);
+        return six;
+    }
+
+    private static void deduceTwoThreeFive(Map<String, Integer> result, List<String> twoThreeFive, String one,
+            String six) {
+        String three = findThree(twoThreeFive, one);
         result.put(three, 3);
         char upperRight = firstMissingChar(three, six);
-        String two = findTwo(lengthMap.get(5), three, upperRight);
+        String two = findTwo(twoThreeFive, three, upperRight);
         result.put(two, 2);
-        String five = findFive(lengthMap.get(5), two, three);
-        result.put(five, 5);
-        return result;
+        result.put(findFive(twoThreeFive, two, three), 5);
+    }
+
+
+    private static Map<Integer, List<String>> groupByLength(List<String> keys) {
+        return keys.stream().collect(Collectors.groupingBy(String::length));
     }
 
     private static boolean containsChars(String string, String target) {
