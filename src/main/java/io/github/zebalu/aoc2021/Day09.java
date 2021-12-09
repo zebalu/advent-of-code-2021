@@ -79,7 +79,7 @@ public class Day09 {
         @Override
         public boolean equals(Object o) {
             if (o instanceof Basin b) {
-                return b.containsAll(this) && containsAll(b);
+                return b.size() == size() && b.containsAll(this);
             }
             return super.equals(o);
         }
