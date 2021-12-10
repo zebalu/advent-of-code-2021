@@ -1,7 +1,8 @@
 package io.github.zebalu.aoc2021;
 
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.Set;
-import java.util.Stack;
 
 public class Day10 {
 
@@ -11,49 +12,27 @@ public class Day10 {
     }
 
     private static void firstPart() {
-        int sum = INPUT.lines().mapToInt(Day10::corruptLinePoint).sum();
-        System.out.println(sum);
+        System.out.println(INPUT.lines().mapToLong(s -> countScores(s, true)).sum());
     }
 
     private static void secondPart() {
-        var scores = INPUT.lines().filter(l -> corruptLinePoint(l) == 0).mapToLong(Day10::lineClosingPoint).sorted()
-                .toArray();
+        var scores = INPUT.lines().mapToLong(s -> countScores(s, false)).filter(i -> i != 0L).sorted().toArray();
         System.out.println(scores[scores.length / 2]);
     }
 
-    private static int corruptLinePoint(String line) {
-        Stack<Chunk> chunks = new Stack<>();
+    private static long countScores(String line, boolean corrupt) {
+        Deque<Chunk> chunks = new LinkedList<>();
         for (int i = 0; i < line.length(); ++i) {
             char ch = line.charAt(i);
             if (Chunk.isStartChar(ch)) {
                 chunks.push(Chunk.forStartChar(ch));
             } else if (chunks.isEmpty() || chunks.peek().endChar != ch) {
-                return Chunk.missingCharPoint(ch);
+                return corrupt ? Chunk.missingCharPoint(ch) : 0L;
             } else {
                 chunks.pop();
             }
         }
-        return 0;
-    }
-
-    private static long lineClosingPoint(String line) {
-        Stack<Chunk> chunks = new Stack<>();
-        for (int i = 0; i < line.length(); ++i) {
-            char ch = line.charAt(i);
-            if (Chunk.isStartChar(ch)) {
-                chunks.push(Chunk.forStartChar(ch));
-            } else if (chunks.isEmpty() || chunks.peek().endChar != ch) {
-                throw new IllegalArgumentException("This method can not get corrupt lines! '"+line+"'");
-            } else {
-                chunks.pop();
-            }
-        }
-        long sum = 0L;
-        while (!chunks.isEmpty()) {
-            sum *= 5L;
-            sum += chunks.pop().closingValue;
-        }
-        return sum;
+        return corrupt ? 0L : chunks.stream().mapToLong(c -> c.closingValue).reduce(0L, (acc, val) -> acc * 5L + val);
     }
 
     private static enum Chunk {
