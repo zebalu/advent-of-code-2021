@@ -25,9 +25,9 @@ public class Day12 {
     }
 
     private static int countPathes(Map<String, Set<String>> graph, boolean doublingAllowed) {
-        Queue<Path> pathes = new LinkedList<>();
+        Queue<Past> pathes = new LinkedList<>();
         int found = 0;
-        pathes.add(new Path("start"));
+        pathes.add(new Past("start"));
         while (!pathes.isEmpty()) {
             var top = pathes.poll();
             if (!top.isEnd()) {
@@ -49,19 +49,19 @@ public class Day12 {
         return graph;
     }
 
-    private static class Path {
-        private final Set<String> caves = new HashSet<>();
+    private static class Past {
+        private final Set<String> visitedCaves = new HashSet<>();
         private final String doubleSmall;
         private final String lastVisited;
 
-        Path(String step) {
+        Past(String step) {
             this(new HashSet<>(), step, null);
         }
 
-        private Path(Set<String> caves, String step, String doubleSmall) {
-            this.caves.addAll(caves);
+        private Past(Set<String> caves, String step, String doubleSmall) {
+            this.visitedCaves.addAll(caves);
             this.doubleSmall = doubleSmall == null ? determineDouble(step) : doubleSmall;
-            this.caves.add(step);
+            this.visitedCaves.add(step);
             this.lastVisited = step;
         }
 
@@ -69,17 +69,17 @@ public class Day12 {
             return lastVisited;
         }
 
-        Path extend(String step) {
-            return new Path(caves, step, doubleSmall);
+        Past extend(String step) {
+            return new Past(visitedCaves, step, doubleSmall);
         }
 
-        List<Path> extend(Set<String> possibilities, boolean doublingAllowed) {
+        List<Past> extend(Set<String> possibilities, boolean doublingAllowed) {
             return possibilities.stream().filter(c -> canExtend(c, doublingAllowed)).map(this::extend).toList();
         }
 
         boolean canExtend(String cave, boolean doublingAllowed) {
-            return isBig(cave)
-                    || (!cave.equals("start") && (!caves.contains(cave) || (doublingAllowed && doubleSmall == null)));
+            return isBig(cave) || (!cave.equals("start")
+                    && (!visitedCaves.contains(cave) || (doublingAllowed && doubleSmall == null)));
         }
 
         boolean isEnd() {
@@ -91,7 +91,7 @@ public class Day12 {
         }
 
         private String determineDouble(String candidate) {
-            if (!isBig(candidate) && caves.contains(candidate)) {
+            if (!isBig(candidate) && visitedCaves.contains(candidate)) {
                 return candidate;
             }
             return null;
