@@ -1,6 +1,5 @@
 package io.github.zebalu.aoc2021;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -24,7 +23,7 @@ public class Day12 {
     private static void secondPart(Map<String, Set<String>> graph) {
         System.out.println(countPathes(graph, true));
     }
-    
+
     private static int countPathes(Map<String, Set<String>> graph, boolean doublingAllowed) {
         Queue<Path> pathes = new LinkedList<>();
         int found = 0;
@@ -51,68 +50,49 @@ public class Day12 {
     }
 
     private static class Path {
-        private final List<String> steps = new ArrayList<>();
         private final Set<String> caves = new HashSet<>();
         private final String doubleSmall;
+        private final String lastVisited;
 
         Path(String step) {
-            this(new ArrayList<>(), new HashSet<>(), step, null);
+            this(new HashSet<>(), step, null);
         }
 
-        private Path(List<String> steps, Set<String> caves, String step, String doubleSmall) {
-            this.steps.addAll(steps);
+        private Path(Set<String> caves, String step, String doubleSmall) {
             this.caves.addAll(caves);
-            this.steps.add(step);
+            this.doubleSmall = doubleSmall == null ? determineDouble(step) : doubleSmall;
             this.caves.add(step);
-            if (doubleSmall == null) {
-                this.doubleSmall = determineDouble(step);
-            } else {
-                this.doubleSmall = doubleSmall;
-            }
+            this.lastVisited = step;
         }
 
         String currentPosition() {
-            return steps.get(steps.size() - 1);
+            return lastVisited;
         }
 
         Path extend(String step) {
-            return new Path(steps, caves, step, doubleSmall);
+            return new Path(caves, step, doubleSmall);
         }
-        
+
         List<Path> extend(Set<String> possibilities, boolean doublingAllowed) {
-            return possibilities.stream().filter(c->canExtend(c, doublingAllowed)).map(this::extend).toList();
+            return possibilities.stream().filter(c -> canExtend(c, doublingAllowed)).map(this::extend).toList();
         }
 
         boolean canExtend(String cave, boolean doublingAllowed) {
-            if (isBig(cave)) {
-                return true;
-            }
-            if (cave.equals("start")) {
-                return false;
-            }
-            if (doublingAllowed && caves.contains(cave) && doubleSmall == null) {
-                return true;
-            }
-            return !caves.contains(cave);
+            return isBig(cave)
+                    || (!cave.equals("start") && (!caves.contains(cave) || (doublingAllowed && doubleSmall == null)));
         }
 
         boolean isEnd() {
-            return currentPosition().equals("end");
+            return "end".equals(lastVisited);
         }
 
         boolean isBig(String cave) {
             return cave.equals(cave.toUpperCase(Locale.ROOT));
         }
 
-        int countVisit(String cave) {
-            return (int) steps.stream().filter(cave::equals).count();
-        }
-
         private String determineDouble(String candidate) {
-            if (!isBig(candidate)) {
-                if (2 == countVisit(candidate)) {
-                    return candidate;
-                }
+            if (!isBig(candidate) && caves.contains(candidate)) {
+                return candidate;
             }
             return null;
         }
