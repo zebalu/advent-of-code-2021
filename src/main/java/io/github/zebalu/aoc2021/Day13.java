@@ -1,7 +1,6 @@
 package io.github.zebalu.aoc2021;
 
 import java.util.Set;
-import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -46,7 +45,7 @@ public class Day13 {
         }
     }
 
-    private static record Instructon(Axis axis, int id) implements UnaryOperator<Coord> {
+    private static record Instructon(Axis axis, int id) {
         private static final Pattern FOLD_PATTERN = Pattern.compile("fold along (.)=(\\d+)");
 
         Set<Coord> apply(Set<Coord> map) {
@@ -66,10 +65,6 @@ public class Day13 {
                 throw new IllegalArgumentException("can not read: " + line);
             }
             return new Instructon(Axis.valueOf(m.group(1).toUpperCase()), Integer.parseInt(m.group(2)));
-        }
-        @Override
-        public Coord apply(Coord t) {
-            return move(t);
         }
     }
 
