@@ -1,6 +1,7 @@
 package io.github.zebalu.aoc2021;
 
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -9,32 +10,28 @@ public class Day13 {
         firstPart();
         secondPart();
     }
-    
+
     private static void firstPart() {
         var dots = INPUT.lines().takeWhile(s -> !s.isEmpty()).map(Coord::fromString).collect(Collectors.toSet());
-        //        .collect(Collectors.toMap(c -> c, c -> true));
         var folds = INPUT.lines().dropWhile(s -> !s.isEmpty()).dropWhile(s -> s.isEmpty()).map(Instructon::fromString)
                 .toList();
-        folds.get(0).apply(dots);
-        System.out.println(dots.size());
+        System.out.println(folds.get(0).apply(dots).size());
     }
+
     private static void secondPart() {
-        var dots = INPUT.lines().takeWhile(s -> !s.isEmpty()).map(Coord::fromString)
-                .collect(Collectors.toSet());
-        INPUT.lines().dropWhile(s -> !s.isEmpty()).dropWhile(s -> s.isEmpty()).map(Instructon::fromString)
-                .forEach(f->f.apply(dots));
-        print(dots);
+        var dots = INPUT.lines().takeWhile(s -> !s.isEmpty()).map(Coord::fromString).collect(Collectors.toSet());
+        var reducedDots = INPUT.lines().dropWhile(s -> !s.isEmpty()).dropWhile(s -> s.isEmpty())
+                .map(Instructon::fromString).reduce(dots, (d, f) -> f.apply(d), (a, v) -> v);
+        print(reducedDots);
     }
 
     private static void print(Set<Coord> dots) {
-        int minx = dots.stream().mapToInt(Coord::x).min().orElseThrow();
-        int maxx = dots.stream().mapToInt(Coord::x).max().orElseThrow();
-
-        int miny = dots.stream().mapToInt(Coord::y).min().orElseThrow();
-        int maxy = dots.stream().mapToInt(Coord::y).max().orElseThrow();
-
-        for (int y = miny; y <= maxy; ++y) {
-            for (int x = minx; x <= maxx; ++x) {
+        Coord min = new Coord(dots.stream().mapToInt(Coord::x).min().orElseThrow(),
+                dots.stream().mapToInt(Coord::y).min().orElseThrow());
+        Coord max = new Coord(dots.stream().mapToInt(Coord::x).max().orElseThrow(),
+                dots.stream().mapToInt(Coord::y).max().orElseThrow());
+        for (int y = min.y(); y <= max.y(); ++y) {
+            for (int x = min.x(); x <= max.x(); ++x) {
                 System.out.print(dots.contains(new Coord(x, y)) ? "#" : " ");
             }
             System.out.println();
@@ -49,30 +46,30 @@ public class Day13 {
         }
     }
 
-    private static record Instructon(Axis axis, int id) {
+    private static record Instructon(Axis axis, int id) implements UnaryOperator<Coord> {
         private static final Pattern FOLD_PATTERN = Pattern.compile("fold along (.)=(\\d+)");
 
-        void apply(Set<Coord> map) {
-            if (axis == Axis.X) {
-                var toMove = map.stream().filter(k -> k.x() > id).toList();
-                toMove.forEach(k -> {
-                    map.remove(k);
-                    map.add(new Coord(id - (k.x() - id), k.y()));
-                });
-            } else {
-                var toMove = map.stream().filter(k -> k.y() > id).toList();
-                toMove.forEach(k -> {
-                    map.remove(k);
-                    map.add(new Coord(k.x(), id - (k.y() - id)));
-                });
-            }
+        Set<Coord> apply(Set<Coord> map) {
+            return map.stream().map(this::move).collect(Collectors.toSet());
+        }
+
+        private Coord move(Coord coord) {
+            return switch (axis) {
+            case X -> coord.x() > id ? new Coord(id - (coord.x() - id), coord.y()) : coord;
+            case Y -> coord.y() > id ? new Coord(coord.x(), id - (coord.y() - id)) : coord;
+            };
         }
 
         static Instructon fromString(String line) {
             var m = FOLD_PATTERN.matcher(line);
-            if (!m.matches())
+            if (!m.matches()) {
                 throw new IllegalArgumentException("can not read: " + line);
+            }
             return new Instructon(Axis.valueOf(m.group(1).toUpperCase()), Integer.parseInt(m.group(2)));
+        }
+        @Override
+        public Coord apply(Coord t) {
+            return move(t);
         }
     }
 
