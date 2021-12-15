@@ -29,8 +29,8 @@ public class Day15 {
     private static int lowestCost(Map<Coord, Integer> map) {
         Coord endCoord = findEndCoord(map);
         Queue<Path> queue = new PriorityQueue<>();
-        queue.add(new Path(new Coord(0, 0), 0));
         Set<Coord> seen = new HashSet<>();
+        queue.add(new Path(new Coord(0, 0), 0));
         while (!queue.isEmpty() && !queue.peek().at().equals(endCoord)) {
             var top = queue.poll();
             top.at.adjecents().stream().filter(map::containsKey).filter(c -> !seen.contains(c))
@@ -44,11 +44,8 @@ public class Day15 {
     }
 
     private static Coord findEndCoord(Map<Coord, Integer> map) {
-        int maxX = map.keySet().stream().mapToInt(Coord::x).max().orElseThrow();
-        int maxY = map.keySet().stream().mapToInt(Coord::y).max().orElseThrow();
-
-        Coord endCoord = new Coord(maxX, maxY);
-        return endCoord;
+        return new Coord(map.keySet().stream().mapToInt(Coord::x).max().orElseThrow(),
+                map.keySet().stream().mapToInt(Coord::y).max().orElseThrow());
     }
 
     private static Map<Coord, Integer> readMap() {
