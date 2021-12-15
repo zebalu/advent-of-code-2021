@@ -33,7 +33,7 @@ public class Day15 {
         queue.add(new Path(new Coord(0, 0), 0));
         while (!queue.isEmpty() && !queue.peek().at().equals(endCoord)) {
             var top = queue.poll();
-            top.at.adjecents().stream().filter(map::containsKey).filter(c -> !seen.contains(c))
+            top.at().adjecents().stream().filter(map::containsKey).filter(c -> !seen.contains(c))
                     .map(c -> new Path(c, top.cost() + map.get(c))).forEach(s -> {
                         seen.add(s.at());
                         queue.add(s);
