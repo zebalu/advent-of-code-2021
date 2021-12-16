@@ -8,7 +8,15 @@ public class Day16 {
     public static void main(String[] args) {
         String bitBuilder = toBits(INPUT);
         Packet packet = readPacket(bitBuilder.toString());
+        firstPart(packet);
+        secondPart(packet);
+    }
+
+    private static void firstPart(Packet packet) {
         System.out.println(packet.sumVersions());
+    }
+
+    private static void secondPart(Packet packet) {
         System.out.println(packet.value());
     }
 
