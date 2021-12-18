@@ -28,14 +28,15 @@ public class Day18 {
         System.out.println(max);
     }
 
-    private static SnailNum read(String line) {
-        return read(new StringCharacterIterator(line));
-    }
-
     private static SnailNum add(SnailNum left, SnailNum right) {
         var added = new PairNum(left.clone(), right.clone(), null);
-        while (added.reduce());
+        while (added.reduce()) {
+        }
         return added;
+    }
+
+    private static SnailNum read(String line) {
+        return read(new StringCharacterIterator(line));
     }
 
     private static SnailNum read(StringCharacterIterator siterator) {
@@ -60,7 +61,7 @@ public class Day18 {
         }
     }
 
-    private static abstract sealed class SnailNum implements Cloneable  permits PairNum,SimpleNum{
+    private static abstract sealed class SnailNum implements Cloneable permits PairNum,SimpleNum {
         protected SnailNum parent;
 
         abstract long magnitude();
@@ -71,22 +72,18 @@ public class Day18 {
 
         abstract boolean reduce();
 
-        abstract void explode();
-
         abstract void add(long value, boolean left);
 
         abstract boolean shouldReduce();
 
         abstract boolean canExplode();
 
-        abstract boolean canSplit();
+        abstract PairNum getExploding();
 
-        abstract SnailNum getExploding();
-        
         @Override
         protected SnailNum clone() {
             try {
-                SnailNum clone = (SnailNum)super.clone();
+                SnailNum clone = (SnailNum) super.clone();
                 return clone;
             } catch (CloneNotSupportedException e) {
                 throw new IllegalStateException(e);
@@ -117,10 +114,6 @@ public class Day18 {
                 exploding.explode();
                 return true;
             }
-            if (canExplode()) {
-                explode();
-                return true;
-            }
             boolean reduced = left.reduce();
             if (!reduced) {
                 reduced = right.reduce();
@@ -130,16 +123,10 @@ public class Day18 {
 
         @Override
         long magnitude() {
-            if (left.magnitude() < 0) {
-                throw new IllegalStateException("left: " + left.magnitude());
-            } else if (right.magnitude() < 0) {
-                throw new IllegalStateException("right: " + right.magnitude());
-            }
             return 3 * left.magnitude() + 2 * right.magnitude();
         }
 
-        @Override
-        void explode() {
+        private void explode() {
             if (depth() > 4) {
                 var currParent = (PairNum) parent;
                 var curr = (PairNum) this;
@@ -195,12 +182,7 @@ public class Day18 {
         }
 
         @Override
-        boolean canSplit() {
-            return false;
-        }
-
-        @Override
-        SnailNum getExploding() {
+        PairNum getExploding() {
             var result = left.getExploding();
             if (result == null && canExplode()) {
                 result = this;
@@ -215,14 +197,14 @@ public class Day18 {
         public String toString() {
             return (depth() > 4 ? "![" : "[") + left + "," + right + "]";
         }
-        
+
         @Override
         protected PairNum clone() {
             PairNum clone = (PairNum) super.clone();
-            clone.left=clone.left.clone();
-            clone.right=clone.right.clone();
-            clone.left.parent=clone;
-            clone.right.parent=clone;
+            clone.left = clone.left.clone();
+            clone.right = clone.right.clone();
+            clone.left.parent = clone;
+            clone.right.parent = clone;
             return clone;
         }
 
@@ -238,32 +220,24 @@ public class Day18 {
 
         @Override
         long magnitude() {
-            if (value < 0) {
-                throw new IllegalStateException("value: " + value);
-            }
             return value;
         }
 
         @Override
         boolean reduce() {
-            if (value >= 10) {
+            if (shouldReduce()) {
                 long left = value / 2;
                 long right = value % 2 == 1 ? (value + 1) / 2 : value / 2;
                 var replacement = new PairNum(new SimpleNum(left, null), new SimpleNum(right, null), parent);
-                if (parent instanceof PairNum p) {
-                    if (p.left == this) {
-                        p.left = replacement;
-                    } else {
-                        p.right = replacement;
-                    }
+                PairNum p = (PairNum) parent;
+                if (p.left == this) {
+                    p.left = replacement;
+                } else {
+                    p.right = replacement;
                 }
                 return true;
             }
             return false;
-        }
-
-        @Override
-        void explode() {
         }
 
         @Override
@@ -287,18 +261,13 @@ public class Day18 {
         }
 
         @Override
-        SnailNum getExploding() {
+        PairNum getExploding() {
             return null;
         }
 
         @Override
-        boolean canSplit() {
-            return value >= 10;
-        }
-        
-        @Override
         protected SimpleNum clone() {
-            return (SimpleNum)super.clone();
+            return (SimpleNum) super.clone();
         }
     }
 
