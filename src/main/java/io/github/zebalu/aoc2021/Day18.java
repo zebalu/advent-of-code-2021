@@ -2,6 +2,7 @@ package io.github.zebalu.aoc2021;
 
 import java.text.StringCharacterIterator;
 import java.util.List;
+import java.util.Optional;
 
 public class Day18 {
     public static void main(String[] args) {
@@ -15,11 +16,11 @@ public class Day18 {
     }
 
     private static void secondPart(List<SnailNum> nums) {
-        System.out.println(nums.stream().mapToLong(l->maxMagnitude(nums, l)).max().orElseThrow());
+        System.out.println(nums.stream().mapToLong(l -> maxMagnitude(nums, l)).max().orElseThrow());
     }
 
     private static long maxMagnitude(List<SnailNum> nums, SnailNum left) {
-        return nums.stream().filter(n->n!=left).mapToLong(r->add(left, r).magnitude()).max().orElseThrow();
+        return nums.stream().filter(n -> n != left).mapToLong(r -> add(left, r).magnitude()).max().orElseThrow();
     }
 
     private static SnailNum add(SnailNum left, SnailNum right) {
@@ -72,7 +73,7 @@ public class Day18 {
 
         abstract boolean canExplode();
 
-        abstract PairNum getExploding();
+        abstract Optional<PairNum> getExploding();
 
         @Override
         protected SnailNum clone() {
@@ -104,15 +105,14 @@ public class Day18 {
         @Override
         boolean reduce() {
             var exploding = getExploding();
-            if (exploding != null) {
-                exploding.explode();
+            if(exploding.isPresent()) {
+                exploding.get().explode();
                 return true;
             }
-            boolean reduced = left.reduce();
-            if (!reduced) {
-                reduced = right.reduce();
+            if (!left.reduce()) {
+                return right.reduce();
             }
-            return reduced;
+            return true;
         }
 
         @Override
@@ -124,19 +124,15 @@ public class Day18 {
             if (depth() > 4) {
                 addTo(((SimpleNum) left).value, true);
                 addTo(((SimpleNum) right).value, false);
-                unlinkMe();
+                unlinkMe((PairNum) parent);
             }
         }
 
         private void addTo(long value, boolean left) {
-            var found = findFirstNotMe(left);
-            if (found != null) {
-                found.add(value, !left);
-            }
+            findFirstNotMe(left).ifPresent(found -> found.add(value, !left));
         }
 
-        private void unlinkMe() {
-            var currParent = (PairNum) parent;
+        private void unlinkMe(PairNum currParent) {
             if (currParent.left == this) {
                 currParent.left = new SimpleNum(0, currParent);
             } else {
@@ -144,19 +140,19 @@ public class Day18 {
             }
         }
 
-        SnailNum findFirstNotMe(boolean left) {
+        Optional<SnailNum> findFirstNotMe(boolean left) {
             var currParent = (PairNum) parent;
-            var curr = (PairNum) this;
+            var curr = this;
             while (currParent != null) {
                 if (left && currParent.right == curr) {
-                    return currParent.left;
+                    return Optional.of(currParent.left);
                 } else if (!left && currParent.left == curr) {
-                    return currParent.right;
+                    return Optional.of(currParent.right);
                 }
                 curr = currParent;
                 currParent = (PairNum) currParent.parent;
             }
-            return null;
+            return Optional.empty();
         }
 
         @Override
@@ -179,15 +175,8 @@ public class Day18 {
         }
 
         @Override
-        PairNum getExploding() {
-            var result = left.getExploding();
-            if (result == null && canExplode()) {
-                result = this;
-            }
-            if (result == null) {
-                result = right.getExploding();
-            }
-            return result;
+        Optional<PairNum> getExploding() {
+            return left.getExploding().or(()-> canExplode() ? Optional.of(this) : right.getExploding());
         }
 
         @Override
@@ -258,8 +247,8 @@ public class Day18 {
         }
 
         @Override
-        PairNum getExploding() {
-            return null;
+        Optional<PairNum> getExploding() {
+            return Optional.empty();
         }
 
         @Override
