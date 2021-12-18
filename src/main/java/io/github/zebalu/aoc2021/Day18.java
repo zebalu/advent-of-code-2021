@@ -1,31 +1,25 @@
 package io.github.zebalu.aoc2021;
 
 import java.text.StringCharacterIterator;
+import java.util.List;
 
 public class Day18 {
     public static void main(String[] args) {
-        firstPart();
-        secondPart();
+        var nums = INPUT.lines().map(Day18::read).toList();
+        firstPart(nums);
+        secondPart(nums);
     }
 
-    private static void firstPart() {
-        System.out.println(INPUT.lines().map(Day18::read).reduce((l, r) -> add(l, r)).orElseThrow().magnitude());
+    private static void firstPart(List<SnailNum> nums) {
+        System.out.println(nums.stream().reduce((l, r) -> add(l, r)).orElseThrow().magnitude());
     }
 
-    private static void secondPart() {
-        var nums = INPUT.lines().map(l -> read(new StringCharacterIterator(l))).toList();
-        long max = Long.MIN_VALUE;
-        for (SnailNum left : nums) {
-            for (SnailNum right : nums) {
-                if (left != right) {
-                    var magnitude = add(left, right).magnitude();
-                    if (max < magnitude) {
-                        max = magnitude;
-                    }
-                }
-            }
-        }
-        System.out.println(max);
+    private static void secondPart(List<SnailNum> nums) {
+        System.out.println(nums.stream().mapToLong(l->maxMagnitude(nums, l)).max().orElseThrow());
+    }
+
+    private static long maxMagnitude(List<SnailNum> nums, SnailNum left) {
+        return nums.stream().filter(n->n!=left).mapToLong(r->add(left, r).magnitude()).max().orElseThrow();
     }
 
     private static SnailNum add(SnailNum left, SnailNum right) {
@@ -128,38 +122,41 @@ public class Day18 {
 
         private void explode() {
             if (depth() > 4) {
-                var currParent = (PairNum) parent;
-                var curr = (PairNum) this;
-                var found = false;
-                while (currParent != null && !found) {
-                    if (currParent.right == curr) {
-                        currParent.left.add(((SimpleNum) left).value, false);
-                        found = true;
-                    }
-                    curr = currParent;
-                    currParent = (PairNum) currParent.parent;
-                }
-                currParent = (PairNum) parent;
-                curr = (PairNum) this;
-                found = false;
-                while (currParent != null && !found) {
-                    if (currParent.left == curr) {
-                        currParent.right.add(((SimpleNum) right).value, true);
-                        found = true;
-                    }
-                    curr = currParent;
-                    currParent = (PairNum) currParent.parent;
-                }
-                currParent = (PairNum) parent;
-                if (currParent.left == this) {
-                    currParent.left = new SimpleNum(0, currParent);
-                } else {
-                    currParent.right = new SimpleNum(0, currParent);
-                }
-                this.parent = null;
-                this.left = null;
-                this.right = null;
+                addTo(((SimpleNum) left).value, true);
+                addTo(((SimpleNum) right).value, false);
+                unlinkMe();
             }
+        }
+
+        private void addTo(long value, boolean left) {
+            var found = findFirstNotMe(left);
+            if (found != null) {
+                found.add(value, !left);
+            }
+        }
+
+        private void unlinkMe() {
+            var currParent = (PairNum) parent;
+            if (currParent.left == this) {
+                currParent.left = new SimpleNum(0, currParent);
+            } else {
+                currParent.right = new SimpleNum(0, currParent);
+            }
+        }
+
+        SnailNum findFirstNotMe(boolean left) {
+            var currParent = (PairNum) parent;
+            var curr = (PairNum) this;
+            while (currParent != null) {
+                if (left && currParent.right == curr) {
+                    return currParent.left;
+                } else if (!left && currParent.left == curr) {
+                    return currParent.right;
+                }
+                curr = currParent;
+                currParent = (PairNum) currParent.parent;
+            }
+            return null;
         }
 
         @Override
