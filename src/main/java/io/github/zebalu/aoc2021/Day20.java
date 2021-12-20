@@ -115,7 +115,7 @@ public class Day20 {
         char enhancerChar(String binary) {
             return enhancerString.charAt(Integer.parseInt(binary, 2));
         }
-        
+
         long countLit(int iteration) {
             return countLit(iteration, iteration);
         }
@@ -124,7 +124,7 @@ public class Day20 {
             long coutn = 0L;
             for (int x = image.minX - extraSpace; x <= image.maxX + extraSpace; ++x) {
                 for (int y = image.minY - extraSpace; y <= image.maxY + extraSpace; ++y) {
-                    if (isLit(new Coord(x, y), iteration-1)) {
+                    if (isLit(new Coord(x, y), iteration - 1)) {
                         ++coutn;
                     }
                 }
