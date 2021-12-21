@@ -1,11 +1,11 @@
 package io.github.zebalu.aoc2021;
 
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.stream.Collectors;
 
 public class Day21 {
@@ -16,12 +16,12 @@ public class Day21 {
     }
 
     private static void secondPart(int[] positions) {
-        System.out.println(plays(positions[0], positions[1], 0, 0, true).getWinner());
-        System.out.println("iterative: "+iterativePlays(positions));
+        System.out.println(iterativePlays(positions));
+        
     }
     
     private static long iterativePlays(int[] positions) {
-        Queue<State> queue = new LinkedList<>();
+        Deque<State> queue = new LinkedList<>();
         queue.add(new State(positions[0], positions[1], 0, 0, 1L, true));
         long p1Wins = 0L;
         long p2Wins = 0L;   
@@ -33,11 +33,11 @@ public class Day21 {
                 p2Wins+=top.ways;
             } else if(top.p1Comes) {
                 fromToReachableCountMap.get(top.p1Pos).forEach(pc -> {
-                    queue.add(new State(pc.toPosition, top.p2Pos, top.p1Score+pc.toPosition, top.p2Score, top.ways*pc.count, !top.p1Comes));
+                    queue.push(new State(pc.toPosition, top.p2Pos, top.p1Score+pc.toPosition, top.p2Score, top.ways*pc.count, !top.p1Comes));
                 });
             } else {
                 fromToReachableCountMap.get(top.p2Pos).forEach(pc -> {
-                    queue.add(new State(top.p1Pos, pc.toPosition, top.p1Score, top.p2Score+pc.toPosition, top.ways*pc.count, !top.p1Comes));
+                    queue.push(new State(top.p1Pos, pc.toPosition, top.p1Score, top.p2Score+pc.toPosition, top.ways*pc.count, !top.p1Comes));
                 });
             }
         }
@@ -50,24 +50,6 @@ public class Day21 {
     
     private static record State(int p1Pos, int p2Pos, int p1Score, int p2Score, long ways, boolean p1Comes) {
         
-    }
-
-    private static Wins plays(int p1Pos, int p2Pos, int p1Score, int p2Score, boolean p1Comes) {
-        if (p1Comes) {
-            if (21 <= p2Score) {
-                return new Wins(0L, 1L);
-            }
-            return fromToReachableCountMap.get(p1Pos).stream()
-                    .map(e -> plays(e.toPosition(), p2Pos, p1Score + e.toPosition(), p2Score, !p1Comes).mul(e.count()))
-                    .reduce((a, v) -> a.add(v)).orElseThrow();
-        } else {
-            if (21 <= p1Score) {
-                return new Wins(1L, 0L);
-            }
-            return fromToReachableCountMap.get(p2Pos).stream()
-                    .map(e -> plays(p1Pos, e.toPosition, p1Score, p2Score + e.toPosition, !p1Comes).mul(e.count()))
-                    .reduce((a, v) -> a.add(v)).orElseThrow();
-        }
     }
 
     private static final List<Integer> diracDieRolls = generateDiracDieRolls();
@@ -104,23 +86,6 @@ public class Day21 {
                                 .stream().map(e2 -> new PositionCount(e2.getKey(), e2.getValue())).toList()))
                 .forEach(e -> result.put(e.getKey(), e.getValue()));
         return result;
-    }
-
-    private static record Wins(long p1Wins, long p2Wins) {
-        Wins add(Wins o) {
-            return new Wins(p1Wins + o.p1Wins, p2Wins + o.p2Wins);
-        }
-
-        Wins mul(long val) {
-            return new Wins(val * p1Wins, val * p2Wins);
-        }
-
-        long getWinner() {
-            if (p1Wins < p2Wins) {
-                return p2Wins;
-            }
-            return p1Wins;
-        }
     }
 
     private static record PositionCount(int toPosition, long count) {
