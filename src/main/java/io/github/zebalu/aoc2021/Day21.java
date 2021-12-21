@@ -2,8 +2,10 @@ package io.github.zebalu.aoc2021;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.stream.Collectors;
 
 public class Day21 {
@@ -15,6 +17,39 @@ public class Day21 {
 
     private static void secondPart(int[] positions) {
         System.out.println(plays(positions[0], positions[1], 0, 0, true).getWinner());
+        System.out.println("iterative: "+iterativePlays(positions));
+    }
+    
+    private static long iterativePlays(int[] positions) {
+        Queue<State> queue = new LinkedList<>();
+        queue.add(new State(positions[0], positions[1], 0, 0, 1L, true));
+        long p1Wins = 0L;
+        long p2Wins = 0L;   
+        while(!queue.isEmpty()) {
+            State top = queue.poll();
+            if(top.p1Score>=21) {
+                p1Wins+=top.ways;
+            } else if(top.p2Score >=21) {
+                p2Wins+=top.ways;
+            } else if(top.p1Comes) {
+                fromToReachableCountMap.get(top.p1Pos).forEach(pc -> {
+                    queue.add(new State(pc.toPosition, top.p2Pos, top.p1Score+pc.toPosition, top.p2Score, top.ways*pc.count, !top.p1Comes));
+                });
+            } else {
+                fromToReachableCountMap.get(top.p2Pos).forEach(pc -> {
+                    queue.add(new State(top.p1Pos, pc.toPosition, top.p1Score, top.p2Score+pc.toPosition, top.ways*pc.count, !top.p1Comes));
+                });
+            }
+        }
+        if(p1Wins<p2Wins) {
+            return p2Wins;
+        } 
+        return p1Wins;
+
+    }
+    
+    private static record State(int p1Pos, int p2Pos, int p1Score, int p2Score, long ways, boolean p1Comes) {
+        
     }
 
     private static Wins plays(int p1Pos, int p2Pos, int p1Score, int p2Score, boolean p1Comes) {
