@@ -1,6 +1,7 @@
 package io.github.zebalu.aoc2021;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Day25 {
@@ -16,48 +17,59 @@ public class Day25 {
         do {
             moved = map.tick();
             ++steps;
-        } while(moved!=0);
+        } while (moved != 0);
         System.out.println(steps);
     }
-    
+
     private static class SeaFloorMap {
         private final Map<Coord, Character> cucumbers;
         private final int limitX;
         private final int limitY;
+
         private SeaFloorMap(Map<Coord, Character> cucumbers) {
-            this.cucumbers=cucumbers;
+            this.cucumbers = cucumbers;
             limitX = cucumbers.keySet().stream().mapToInt(Coord::x).max().orElseThrow() + 1;
             limitY = cucumbers.keySet().stream().mapToInt(Coord::y).max().orElseThrow() + 1;
         }
-        
+
         int tick() {
-            var toMoveLeft = cucumbers.keySet().stream().filter(k->cucumbers.get(k)=='>' && !cucumbers.containsKey(k.next(limitX, limitY, '>'))).toList();
-            toMoveLeft.stream().forEach(c-> {
-                cucumbers.remove(c);
-                cucumbers.put(c.next(limitX, limitY, '>'), '>');
-            });
-            var toMoveDown = cucumbers.keySet().stream().filter(k->cucumbers.get(k)=='v' && !cucumbers.containsKey(k.next(limitX, limitY, 'v'))).toList();
-            toMoveDown.stream().forEach(c-> {
-                cucumbers.remove(c);
-                cucumbers.put(c.next(limitX, limitY, 'v'), 'v');
-            });
-            return toMoveLeft.size()+toMoveDown.size();
+            return move('>') + move('v');
         }
+
+        private List<Coord> findMovables(char direction) {
+            return cucumbers.keySet().stream()
+            .filter(k -> cucumbers.get(k) == direction && !cucumbers.containsKey(k.next(limitX, limitY, direction)))
+            .toList();
+        }
+        
+        private int move(char direction) {
+            var toMove = findMovables(direction);
+            move(toMove, direction);
+            return toMove.size();
+        }
+        
+        private void move(List<Coord> toMove, char direction) {
+            toMove.stream().forEach(c -> {
+                    cucumbers.remove(c);
+                    cucumbers.put(c.next(limitX, limitY, direction), direction);
+            });
+        }
+
         static SeaFloorMap fromString(String scan) {
             var lines = INPUT.lines().toList();
             var map = new HashMap<Coord, Character>();
-            for(int y=0; y<lines.size(); ++y) {
+            for (int y = 0; y < lines.size(); ++y) {
                 String line = lines.get(y);
-                for(int x=0; x<line.length(); ++x  ) {
-                    if(line.charAt(x)!='.') {
-                    map.put(new Coord(x,y), line.charAt(x));
+                for (int x = 0; x < line.length(); ++x) {
+                    if (line.charAt(x) != '.') {
+                        map.put(new Coord(x, y), line.charAt(x));
                     }
                 }
             }
             return new SeaFloorMap(map);
         }
     }
-    
+
     private static final record Coord(int x, int y) {
         Coord next(int maxX, int maxY, char direction) {
             if (direction == '>') {
