@@ -2,6 +2,7 @@ package io.github.zebalu.aoc2021;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -222,13 +223,24 @@ public class Day23 {
             Room other = (Room) obj;
             return Arrays.equals(amphipods, other.amphipods) && position == other.position;
         }
-
     }
 
-    private static record State(Amphipod[] hallway, Room[] rooms, State previous) implements Comparable<State> {
+    private static class State implements Comparable<State> {
 
         private static final Comparator<State> STATE_PRICE_COMPARATOR = Comparator.comparingInt(State::price);
         private static final Set<Integer> DONT_STAND_AT = Set.of(2, 4, 6, 8);
+        
+        private final Amphipod[] hallway;
+        private final Room[] rooms;
+        private final State previous;
+        private final BitSet asBits;
+        
+        State(Amphipod[] hallway, Room[] rooms, State previous) {
+            this.hallway=hallway;
+            this.rooms=rooms;
+            this.previous=previous;
+            asBits = toBitSet();
+        }
 
         List<State> nextStates() {
             List<State> result = new ArrayList<>();
@@ -253,8 +265,7 @@ public class Day23 {
                     if (top != null) {
                         for (int i = 0; i < hallway.length; ++i) {
                             int moves = r.moveOutPrice(top);
-                            if (i != r.position && isFree(r.position(), i) && !DONT_STAND_AT.contains(i)
-                            /* && (i == top.desiredRoom() - 1 || i == top.desiredRoom() + 1) */) {
+                            if (i != r.position && isFree(r.position(), i) && !DONT_STAND_AT.contains(i)) {
                                 moves += Math.abs(r.position - i);
                                 Amphipod moved = new Amphipod(top.type(), top.price(), top.moved() + moves);
                                 Amphipod[] h2 = new Amphipod[hallway.length];
@@ -333,17 +344,6 @@ public class Day23 {
                         + "#" + rooms[3].toString(rooms[3].amphipods[i]) + "##\n");
 
             }
-            /*
-             * sb.append("##"+rooms[0].toString(rooms[0].front)+"#"+rooms[1].toString(rooms[
-             * 1].front)+"#"+rooms[2].toString(rooms[2].front)+"#"+rooms[3].toString(rooms[3
-             * ].front)+"##\n");
-             * sb.append("  "+rooms[0].toString(rooms[0].back)+" "+rooms[1].toString(rooms[1
-             * ].back)+" "+rooms[2].toString(rooms[2].back)+" "+rooms[3].toString(rooms[3].
-             * back)+" ");
-             */
-            /*
-             * for (var r : rooms) { sb.append(r + " "); }
-             */
             return sb.toString();
         }
 
@@ -430,17 +430,56 @@ public class Day23 {
         @Override
         public boolean equals(Object o) {
             if (o instanceof State s) {
+                /*
                 if (!Arrays.equals(hallway, s.hallway)) {
                     return false;
                 }
                 return Arrays.equals(rooms, s.rooms);
+                */
+                return s.asBits.equals(asBits);
             }
             return false;
         }
 
         @Override
         public int hashCode() {
-            return Arrays.hashCode(hallway) * 23 + Arrays.hashCode(rooms);
+            return asBits.hashCode();// Arrays.hashCode(hallway) * 23 + Arrays.hashCode(rooms);
+        }
+        
+        private BitSet toBitSet() {
+            int bitCount = hallway.length*rooms.length*rooms[0].amphipods.length*3;
+            int pointer = bitCount-1;
+            BitSet bitSet = new BitSet(bitCount);
+            for(int i=0; i<hallway.length; ++i) {
+                int v = hallway[i]==null?0:(hallway[i].desiredRoom()+1);
+                if((v&1)==1) {
+                    bitSet.set(pointer);
+                }
+                if((v&2)==2) {
+                    bitSet.set(pointer-1);
+                }
+                if((v&4)==4) {
+                    bitSet.set(pointer-2);
+                }
+                pointer-=3;
+            }
+            for(int i=0; i<rooms.length; ++i) {
+                Room room = rooms[i];
+                for(int j=0; j<room.amphipods.length; ++j) {
+                    int v = rooms[i].amphipods[j]==null?0:(rooms[i].amphipods[j].desiredRoom()+1);
+                    if((v&1)==1) {
+                        bitSet.set(pointer);
+                    }
+                    if((v&2)==2) {
+                        bitSet.set(pointer-1);
+                    }
+                    if((v&4)==4) {
+                        bitSet.set(pointer-2);
+                    }
+                    pointer-=3;
+                }
+            }
+            return bitSet;
         }
     }
 
