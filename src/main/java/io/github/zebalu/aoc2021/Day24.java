@@ -2,18 +2,30 @@ package io.github.zebalu.aoc2021;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
 import java.util.function.Function;
 
 public class Day24 {
-    static int min = Integer.MAX_VALUE;
-    static long c = 0;
-    static final long tooLow = 89961192699411L;
+
     public static void main(String[] args) {
+        var separated = getSeparatedInstructions();
+        firstPart(separated);
+        secondPart(separated);
+    }
+
+    private static void firstPart(List<List<Instruction>> separated) {
+        var minMax = withInstructions(separated);
+        System.out.println(minMax.max());
+    }
+
+    private static void secondPart(List<List<Instruction>> separated) {
+        var minMax = withInstructions(separated);
+        System.out.println(minMax.min());
+    }
+
+    private static List<List<Instruction>> getSeparatedInstructions() {
         var instructions = INPUT.lines().map(Instruction::read).toList();
         List<List<Instruction>> separated = new ArrayList<>();
         for (Instruction i : instructions) {
@@ -23,250 +35,58 @@ public class Day24 {
                 separated.get(separated.size() - 1).add(i);
             }
         }
-        int dMax = 26*26*26*26;
-        Map<Integer, Set<Integer>> prev = new HashMap<>();
-        prev.put(0, new HashSet<>());
-        for(int n= 1; n<=9; ++n) {
-           Computer c = new Computer(0L);
-           c.registers.put("w", n);
-           c.execute(separated.get(0));
-           prev.get(0).add(c.registers.get("z"));
-        }
-        prev.put(13, new HashSet<>());
-        for(int n= 1; n<=9; ++n) {
-            for(int z=0; z<26; ++z) {
-            Computer c = new Computer(0L);
-            c.registers.put("w", n);
-            c.execute(separated.get(0));
-            prev.get(13).add(c.registers.get("z"));
-            }
-         }
-//        for(var l:separated) {
-//            if(prev.containsKey(separated.indexOf(l))) {
-//                //
-//            } else {
-//            Set<Integer> set = new HashSet<>();
-//            //for(int z=0; z<26*26*26*26; ++z) {
-//            for(int  z : prev.get(separated.indexOf(l)-1)) {
-//                for(int n=1; n<=9&&z<dMax; ++n) {
-//                    Computer c = new Computer(0L);
-//                    c.registers.put("w", n);
-//                    c.registers.put("z", z);
-//                    c.execute(l);
-//                    set.add(c.registers.get("z"));
-//                }
-//            }
-//            System.out.println(set.size());
-//            prev.put(separated.indexOf(l), set);
-//            }
-//        }
-//        long prod = 1L;
-//        for(int i=0; i<14; ++i) {
-//            prod*=prev.get(i).size();
-//            System.out.println("i: "+i+"\t"+prev.get(i).size());
-//        }
-//        System.out.println(prod);
-//        for(var l: separated) {
-//            System.out.println(separated.indexOf(l)+"\tisDown:"+isDown(l));
-//            System.out.println("inp w");
-//            l.forEach(System.out::println);
-//            System.out.println("\n\n");
-//        }
-        System.out.println("found: "+couldYieldZ(instructions, separated, 13, 0, true, ""));
-//        StringBuilder sb = new StringBuilder();
-//        /*
-//        sb.append(couldYieldZ(instructions, separated, 13, 0, false, ""));
-//        System.out.println(sb.reverse());
-//        System.out.println(min);
-//        Computer c = new Computer(89961192699411L);
-//        System.out.println(c.execute(instructions));
-//        System.out.println(c);
-//        */
-//        long number = 99_999_999_999_999L;
-//        boolean found = true;
-//        long steps = 0L;
-//        while (!found) {
-//            ++steps;
-//            found = new Computer(number).execute(instructions);
-//            if (found) {
-//                System.out.println(number);
-//            }
-//            number = decrement(number);
-//            if (steps % 1000 == 0) {
-//                System.out.println("steps: " + steps + "\tnum: " + number);
-//            }
-//        }
-//        int pow = getPow26(1);
-//        System.out.println(minInPow26(pow));
-//        System.out.println(maxInPow26(pow));
-//        pow=getPow26(27);
-//        System.out.println(minInPow26(pow));
-//        System.out.println(maxInPow26(pow));
-
-        System.out.println("end :(");
+        return separated;
     }
 
-    static List<Integer> couldYieldZero(List<Instruction> instructions) {
-        List<Integer> result = new ArrayList<>();
-        List<Integer> fallback = new ArrayList<>();
-        for (int i = 1; i <= 9; ++i) {
-            fallback.add(i);
-            for(int z=0; z<25; ++z) {
-                Computer computer = new Computer(0);
-                computer.registers.put("w", i);
-                computer.registers.put("z", z);
-                if (computer.execute(instructions)) {
-                    result.add(i);
-                }
-            }
-        }
-        if (result.isEmpty()) {
-            return fallback;
-        }
-        return result.stream().distinct().toList();
-    }
-    
-    static String couldYieldZ(List<Instruction> full, List<List<Instruction>> instructions, int level, int neededZ, boolean forward, String sofar) {
-        if(level<min) {
-            System.out.println("new min: "+level);
-            min=level;
-        }
-        
-        int i = forward?1:9;
-        int stop = forward?10:0;
-        int diff = forward?1:-1;
-        int pow = getPow26(neededZ);
-        int next = 0;
-        int min = minInPow26(pow-1);
-        Function<Integer, Integer> zDif = x->x+1;
-        if (isDown(instructions.get(level))) {
-            next = (neededZ+1)*26;//maxInPow26(pow)*26;
-            min = neededZ; //minInPow26(pow);
-        } else {
-            next =neededZ; //maxInPow26(pow); // maxInPow26(pow);
-            min = neededZ/26;// minInPow26(pow-1); //minInPow26(pow); //minInPow26(pow)-1;
-            zDif = x->x+1; //+26;
-            
-        }
-        ++c;
-        if(c%1L==0L) {
-            System.out.println(c+"\tlevel: "+level+"\tneededZ: "+neededZ+"\tmin: "+min+"\tmax: "+next+"\t"+sofar);
-        }
-        for (; i != stop; i+=diff) {
-            for(int z=min; z<next; z=zDif.apply(z)) {
-                Computer computer = new Computer(0);
-                computer.registers.put("w", i);
-                computer.registers.put("z", z);
-                if(computer.execute(instructions.get(level)) && computer.registers.get("z")==neededZ) {
-                    if(level>0) {
-                        
-                        if(computer.registers.get("z")!=neededZ) {
-                            System.out.println(computer);
-                            System.out.println("level: "+level+"\t neededZ: "+neededZ+"\t"+computer.registers.get("z"));
-                            System.exit(1);
-                        }
-                        
-                        var previous = couldYieldZ(full, instructions, level-1, z, forward, i+sofar);
-                        //System.out.println("level: "+level+"\tnum: "+i+"\tmod: "+z+"\tlup: "+previous+"\tchecked: "+(i+sofar));
-                        if(!previous.isEmpty()) {
-                            return previous;
-                        }
-                    } else {
-                        Computer checker = new Computer(Long.valueOf(i+sofar));
-                        System.out.println(i+sofar);
-                        if(checker.execute(full)) { // && checker.registers.get("z") == 0) {
-                            return i+sofar;
-                        }
+    private static MinMax withInstructions(List<List<Instruction>> instructions) {
+        int currPow = 0;
+        var validZs = new HashMap<Integer, MinMax>();
+        validZs.put(0, new MinMax(0L, 0L));
+        for (var digitChecker : instructions) {
+            currPow += isDown(digitChecker) ? -1 : +1;
+            var minZ = Math.pow(26, currPow - 1) - 1;
+            var maxZ = Math.pow(26, currPow);
+            var currentZs = new HashMap<Integer, MinMax>();
+            for (var zMinMaxEntry : validZs.entrySet()) {
+                var z = zMinMaxEntry.getKey();
+                var currMinMax = zMinMaxEntry.getValue();
+                for (int digit = 1; digit <= 9; ++digit) {
+                    var w = digit;
+                    var newZ = calculateNewZ(digitChecker, z, digit);
+                    if (minZ < newZ && newZ < maxZ) {
+                        currentZs.compute(newZ,
+                                (k, v) -> v == null ? new MinMax(currMinMax.min() * 10 + w, currMinMax.max() * 10 + w)
+                                        : v.bestOf(currMinMax.min() * 10 + w, currMinMax.max() * 10 + w));
                     }
                 }
             }
+            validZs = currentZs;
         }
-        return "";
-    }
-    
-    private static int getPow26(int num) {
-        int current = num;
-        int count = 0;
-        while(current>0) {
-            ++count;
-            current/=26;
-        }
-        return count;
-    }
-    
-    private static int minInPow26(int pow) {
-        int min = 1;
-        for(int i=1; i<pow; ++i) {
-            min*=26;
-        }
-        return min-1;
-    }
-    
-    private static int maxInPow26(int pow) {
-        int max = 1;
-        for(int i=1; i<=pow; ++i) {
-            max*=26;
-        }
-        return max;
-    }
-    
-    static boolean isDown(List<Instruction> instructions) {
-        return instructions.stream().filter(i->i instanceof Div).map(Instruction::toString).anyMatch(s->s.equals("div z 26"));
+        return validZs.get(0);
     }
 
-    static long decrement(long number) {
-        var candidate = number - 1;
-        String asString = Long.toString(candidate);
-        if (asString.length() != 14) {
-            throw new IllegalArgumentException("can not decrement: " + number);
-        }
-        if (asString.contains("0")) {
-            StringBuilder sb = new StringBuilder();
-            boolean found = false;
-            for (int i = 0; i < asString.length(); ++i) {
-                if (found) {
-                    sb.append("0");
-                } else {
-                    char c = asString.charAt(i);
-                    found = c == '0';
-                    sb.append(c);
-                }
-            }
-            return decrement(Long.parseLong(sb.toString()));
-        }
-        return candidate;
+    private static int calculateNewZ(List<Instruction> instructions, Integer incommingZ, int digit) {
+        Computer c = new Computer(0L);
+        c.registers.put("w", digit);
+        c.registers.put("z", incommingZ);
+        c.execute(instructions);
+        return c.registers.get("z");
     }
 
-    static long increment(long number) {
-        var candidate = number + 1;
-        String asString = Long.toString(candidate);
-        if (asString.length() != 14) {
-            throw new IllegalArgumentException("can not decrement: " + number);
+    private static record MinMax(long min, long max) {
+        MinMax bestOf(long min, long max) {
+            return new MinMax(Math.min(this.min, min), Math.max(this.max, max));
         }
-        if (asString.contains("0")) {
-            StringBuilder sb = new StringBuilder();
-            boolean found = false;
-            for (int i = 0; i < asString.length(); ++i) {
-                if (found) {
-                    sb.append("1");
-                } else {
-                    char c = asString.charAt(i);
-                    found = c == '0';
-                    if (found) {
-                        sb.append('1');
-                    } else {
-                        sb.append(c);
-                    }
-                }
-            }
-            return Long.parseLong(sb.toString());
-        }
-        return candidate;
+    }
+
+    private static boolean isDown(List<Instruction> instructions) {
+        return instructions.stream().filter(i -> i instanceof Div).map(Instruction::toString)
+                .anyMatch(s -> s.equals("div z 26"));
     }
 
     private static class Computer {
-        int[] digits;
-        int inputPointer = 0;
+        private int[] digits;
+        private int inputPointer = 0;
         Map<String, Integer> registers = new HashMap<>();
 
         Computer(long digitLong) {
@@ -286,15 +106,9 @@ public class Day24 {
 
         boolean execute(List<Instruction> instructions) {
             try {
-                instructions.forEach(i -> {
-//                    String c = toString();
-//                    System.out.print(i+"\t"+c);
-                    i.execute(this);
-//                    System.out.println(" --> "+this);
-                });
-                return true;//registers.get("z") == 0;
+                instructions.forEach(i -> i.execute(this));
+                return true;
             } catch (Exception e) {
-                //e.printStackTrace();
                 return false;
             }
         }
@@ -313,7 +127,7 @@ public class Day24 {
             }
             return res;
         }
-        
+
         @Override
         public String toString() {
             return registers.toString();
@@ -344,13 +158,14 @@ public class Day24 {
 
         Inp(String register) {
             this.register = register;
-            s="inp "+register;
+            s = "inp " + register;
         }
 
         @Override
         void execute(Computer computer) {
             computer.registers.put(register, computer.digits[computer.inputPointer++]);
         }
+
         @Override
         public String toString() {
             return s;
@@ -365,13 +180,14 @@ public class Day24 {
         Mul(String register, String mul) {
             this.register = register;
             this.mulNum = c -> c.getNumber(mul);
-            s="mul "+register+" "+mul;
+            s = "mul " + register + " " + mul;
         }
 
         @Override
         void execute(Computer computer) {
             computer.registers.put(register, computer.registers.get(register) * mulNum.apply(computer));
         }
+
         @Override
         public String toString() {
             return s;
@@ -386,18 +202,18 @@ public class Day24 {
         Add(String register, String add) {
             this.register = register;
             this.addNum = c -> c.getNumber(add);
-            s="add "+register+" "+add;
+            s = "add " + register + " " + add;
         }
 
         @Override
         void execute(Computer computer) {
             computer.registers.put(register, computer.registers.get(register) + addNum.apply(computer));
         }
+
         @Override
         public String toString() {
             return s;
         }
-
     }
 
     private static final class Mod extends Instruction {
@@ -408,7 +224,7 @@ public class Day24 {
         Mod(String register, String mod) {
             this.register = register;
             this.modNum = c -> c.getNumber(mod);
-            s="mod "+register+" "+mod;
+            s = "mod " + register + " " + mod;
         }
 
         @Override
@@ -420,6 +236,7 @@ public class Day24 {
             }
             computer.registers.put(register, computer.registers.get(register) % modNum.apply(computer));
         }
+
         @Override
         public String toString() {
             return s;
@@ -434,7 +251,7 @@ public class Day24 {
         Div(String register, String div) {
             this.register = register;
             this.divNum = c -> c.getNumber(div);
-            s="div "+register+" "+div;
+            s = "div " + register + " " + div;
         }
 
         @Override
@@ -445,6 +262,7 @@ public class Day24 {
             }
             computer.registers.put(register, computer.registers.get(register) / divNum.apply(computer));
         }
+
         @Override
         public String toString() {
             return s;
@@ -459,13 +277,14 @@ public class Day24 {
         Eql(String register, String eql) {
             this.register = register;
             this.eqlNum = c -> c.getNumber(eql);
-            s="eql "+register+" "+eql;
+            s = "eql " + register + " " + eql;
         }
 
         @Override
         void execute(Computer computer) {
             computer.registers.put(register, computer.registers.get(register).equals(eqlNum.apply(computer)) ? 1 : 0);
         }
+
         @Override
         public String toString() {
             return s;
