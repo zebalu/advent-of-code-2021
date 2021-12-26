@@ -2,36 +2,27 @@ package io.github.zebalu.aoc2021;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 import java.util.function.Function;
 
 public class Day19 {
     public static void main(String[] args) {
         var scanners = Arrays.stream(INPUT.split("\n\n")).map(Scanner::read).toList();
-        Set<Scanner> counted = new HashSet<>();
-        counted.add(scanners.get(0));
+        firstPart(scanners);
+        secondPart(scanners);
+    }
 
-        var todo = new ArrayList<>(scanners.subList(1, scanners.size()));
-        while (todo.size() > 0) {
-            boolean found = false;
-            var iCounted = counted.iterator();
-            while (iCounted.hasNext() && !found) {
-                var s1 = iCounted.next();
-                for (int i = 0; i < todo.size() && !found; ++i) {
-                    var s2 = todo.get(i);
-                    var transform = s1.findTransformBy12MatchingCoords(s2);
-                    if (transform != null) {
-                        counted.add(s2);
-                        todo.remove(i);
-                        s2.transform(transform);
-                        found = true;
-                    }
-                }
-            }
-        }
+    private static void firstPart(List<Scanner> scanners) {
+        adjustScanners(scanners);
         System.out.println(scanners.stream().flatMap(s -> s.coords.stream()).distinct().count());
+    }
+
+    private static void secondPart(List<Scanner> scanners) {
         long maxDistance = Long.MIN_VALUE;
         for (var s1 : scanners) {
             for (var s2 : scanners) {
@@ -43,6 +34,26 @@ public class Day19 {
         }
         System.out.println(maxDistance);
     }
+    
+    private static void adjustScanners(List<Scanner> scanners) {
+        Set<Scanner> todo = new HashSet<>(scanners.subList(1, scanners.size()));
+        Queue<Scanner> done = new LinkedList<>();
+        done.add(scanners.get(0));
+        while (!done.isEmpty()) {
+            var s1 = done.poll();
+            var toRemove = Collections.synchronizedList(new LinkedList<Scanner>());
+            todo.parallelStream().forEach(s2 -> {
+                var transform = s1.findTransformBy12MatchingCoords(s2);
+                if (transform != null) {
+                    s2.transform(transform);
+                    toRemove.add(s2);
+                }
+            });
+            todo.removeAll(toRemove);
+            done.addAll(toRemove);
+        }
+    }
+
 
     private static final class Scanner {
         List<Coord> coords;
