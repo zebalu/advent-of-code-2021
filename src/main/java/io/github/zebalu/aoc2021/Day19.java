@@ -42,7 +42,6 @@ public class Day19 {
             }
         }
         System.out.println(maxDistance);
-
     }
 
     private static final class Scanner {
@@ -54,11 +53,12 @@ public class Day19 {
         }
 
         Function<Coord, Coord> findTransformBy12MatchingCoords(Scanner other) {
-            Set<Coord> myFixCoords = new HashSet<>(coords);
+            Set<Coord> myFixCoords = new HashSet<>(coords.subList(0, coords.size()));
             for (var myCoord : coords) {
                 for (var turn : Coord.turns) {
                     var transformedCoords = other.coords.stream().map(turn).toList();
-                    for (var transformed : transformedCoords) {
+                    for (int tt =0; tt<transformedCoords.size()-12; ++tt) {
+                        var transformed = transformedCoords.get(tt);
                         var diff = transformed.minus(myCoord);
                         var count = transformedCoords.stream().map(t -> t.minus(diff)).filter(myFixCoords::contains)
                                 .count();
@@ -105,24 +105,38 @@ public class Day19 {
         static List<Function<Coord, Coord>> turns = generateTurns();
 
         private static List<Function<Coord, Coord>> generateTurns() {
-            List<Function<Coord, Coord>> turns = new ArrayList<>();
-            for (int i = 1; -1 <= i; --i) {
-                for (int j = 1; -1 <= j; --j) {
-                    for (int k = 1; -1 <= k; --k) {
-                        if (i != 0 && j != 0 && k != 0) {
-                            final int si = i;
-                            final int sj = j;
-                            final int sk = k;
-                            turns.add(c -> new Coord(si * c.x, sj * c.y, sk * c.z));
-                            turns.add(c -> new Coord(si * c.x, sj * c.z, sk * c.y));
-                            turns.add(c -> new Coord(si * c.y, sj * c.x, sk * c.z));
-                            turns.add(c -> new Coord(si * c.y, sj * c.z, sk * c.x));
-                            turns.add(c -> new Coord(si * c.z, sj * c.y, sk * c.x));
-                            turns.add(c -> new Coord(si * c.z, sj * c.x, sk * c.y));
-                        }
-                    }
-                }
-            }
+            var turns = new ArrayList<Function<Coord, Coord>>();
+
+            turns.add(c->new Coord(c.x, c.y, c.z));
+            turns.add(c->new Coord(c.x, c.z, -c.y));
+            turns.add(c->new Coord(c.x, -c.y, -c.z));
+            turns.add(c->new Coord(c.x, -c.z, c.y));
+            
+            turns.add(c->new Coord(-c.x, c.z, c.y));
+            turns.add(c->new Coord(-c.x, c.y, -c.z));
+            turns.add(c->new Coord(-c.x, -c.z, -c.y));
+            turns.add(c->new Coord(-c.x, -c.y, c.z));
+
+            turns.add(c->new Coord(c.y, c.z, c.x));
+            turns.add(c->new Coord(c.y, c.x, -c.z));
+            turns.add(c->new Coord(c.y, -c.z, -c.x));
+            turns.add(c->new Coord(c.y, -c.x, c.z));
+
+            turns.add(c->new Coord(-c.y, c.x, c.z));
+            turns.add(c->new Coord(-c.y, c.z, -c.x));
+            turns.add(c->new Coord(-c.y, -c.x, -c.z));            
+            turns.add(c->new Coord(-c.y, -c.z, c.x));
+            
+            turns.add(c->new Coord(c.z, c.x, c.y));
+            turns.add(c->new Coord(c.z, c.y, -c.x));
+            turns.add(c->new Coord(c.z, -c.x, -c.y));
+            turns.add(c->new Coord(c.z, -c.y, c.x));
+
+            turns.add(c->new Coord(-c.z, c.y, c.x));
+            turns.add(c->new Coord(-c.z, c.x, -c.y));
+            turns.add(c->new Coord(-c.z, -c.y, -c.x));
+            turns.add(c->new Coord(-c.z, -c.x, c.y));
+            
             return turns;
         }
     }
