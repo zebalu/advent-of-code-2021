@@ -3,7 +3,9 @@ package io.github.zebalu.aoc2021;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Day20 {
     public static void main(String[] args) {
@@ -77,7 +79,7 @@ public class Day20 {
     private static class Enhancer {
         private final String enhancerString;
         private Image image;
-        Map<Memo, Character> memory = new HashMap<>();
+        Map<Memo, Character> memory = new ConcurrentHashMap<>();
 
         Enhancer(String enhancerString, Image image) {
             this.enhancerString = enhancerString;
@@ -121,15 +123,10 @@ public class Day20 {
         }
 
         private long countLit(int extraSpace, int iteration) {
-            long coutn = 0L;
-            for (int x = image.minX - extraSpace; x <= image.maxX + extraSpace; ++x) {
-                for (int y = image.minY - extraSpace; y <= image.maxY + extraSpace; ++y) {
-                    if (isLit(new Coord(x, y), iteration - 1)) {
-                        ++coutn;
-                    }
-                }
-            }
-            return coutn;
+            return IntStream.range(image.minX - extraSpace, image.maxX + extraSpace + 1).mapToObj(Integer::valueOf)
+                    .flatMap(x -> IntStream.range(image.minY - extraSpace, image.maxY + extraSpace + 1)
+                            .mapToObj(y -> new Coord(x, y)))
+                    .parallel().filter(c -> isLit(c, iteration - 1)).count();
         }
 
         static Enhancer fromString(String desc) {
