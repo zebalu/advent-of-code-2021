@@ -1,5 +1,6 @@
 package io.github.zebalu.aoc2021;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +23,16 @@ public class Day20 {
         System.out.println(enhancer.countLit(50));
     }
 
-    private static record Coord(int x, int y) {
+    private static record Coord(int x, int y) implements Comparable<Coord> {
+        private static final Comparator<Coord> COORD_COMPARATOR = Comparator.comparingInt(Coord::x).thenComparingInt(Coord::y);
         List<Coord> area() {
             return List.of(new Coord(x - 1, y - 1), new Coord(x, y - 1), new Coord(x + 1, y - 1), new Coord(x - 1, y),
                     new Coord(x, y), new Coord(x + 1, y), new Coord(x - 1, y + 1), new Coord(x, y + 1),
                     new Coord(x + 1, y + 1));
+        }
+        @Override
+        public int compareTo(Coord o) {
+            return COORD_COMPARATOR.compare(this, o);
         }
     }
 
@@ -135,7 +141,12 @@ public class Day20 {
         }
     }
 
-    private static record Memo(Coord pixel, int iteration) {
+    private static record Memo(Coord pixel, int iteration) implements Comparable<Memo> {
+        private static final Comparator<Memo> MEMO_COMPARATOR = Comparator.comparing(Memo::pixel).thenComparingInt(Memo::iteration);
+        @Override
+        public int compareTo(Memo o) {
+            return MEMO_COMPARATOR.compare(this, o);
+        }
     }
 
     private static final String INPUT = """
