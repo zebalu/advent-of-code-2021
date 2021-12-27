@@ -1,5 +1,6 @@
 package io.github.zebalu.aoc2021;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,8 @@ public class Day25 {
         }
     }
 
-    private static final record Coord(int x, int y) {
+    private static final record Coord(int x, int y) implements Comparable<Coord> {
+        private static final Comparator<Coord> COORD_COMPARATOR = Comparator.comparingInt(Coord::x).thenComparingInt(Coord::y);
         Coord next(int maxX, int maxY, char direction) {
             if (direction == '>') {
                 int nX = (x + 1 < maxX) ? x + 1 : 0;
@@ -80,6 +82,10 @@ public class Day25 {
                 return new Coord(x, nY);
             }
             throw new IllegalArgumentException("unknown direction: " + direction);
+        }
+        @Override
+        public int compareTo(Coord o) {
+            return COORD_COMPARATOR.compare(this, o);
         }
     }
 
