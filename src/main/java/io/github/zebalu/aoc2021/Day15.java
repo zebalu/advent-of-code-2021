@@ -84,9 +84,14 @@ public class Day15 {
         return n;
     }
 
-    private static record Coord(int x, int y) {
+    private static record Coord(int x, int y) implements Comparable<Coord> {
+        private static final Comparator<Coord> COORD_COMPARATOR = Comparator.comparingInt(Coord::x).thenComparingInt(Coord::y);
         List<Coord> adjecents() {
             return List.of(new Coord(x - 1, y), new Coord(x + 1, y), new Coord(x, y - 1), new Coord(x, y + 1));
+        }
+        @Override
+        public int compareTo(Coord o) {
+            return COORD_COMPARATOR.compare(this, o);
         }
     }
 
