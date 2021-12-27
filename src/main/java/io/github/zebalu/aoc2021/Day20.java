@@ -1,7 +1,6 @@
 package io.github.zebalu.aoc2021;
 
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,11 +15,15 @@ public class Day20 {
     }
 
     private static void firstPart(Enhancer enhancer) {
-        System.out.println(enhancer.countLit(2));
+        System.out.println(enhancer.enhance().enhance().countLit());
     }
 
     private static void secondPart(Enhancer enhancer) {
-        System.out.println(enhancer.countLit(50));
+        var current = enhancer;
+        for(int i =0; i<50; ++i ) {
+            current = current.enhance();
+        }
+        System.out.println(current.countLit());
     }
 
     private static record Coord(int x, int y) implements Comparable<Coord> {
@@ -39,12 +42,17 @@ public class Day20 {
     private static class Image {
         static final char LIT = '#';
         static final char DARK = '.';
+        final char defaultChar;
         int minX = 0;
         int maxX = 0;
         int minY = 0;
         int maxY = 0;
-        Map<Coord, Character> map = new HashMap<>();
+        Map<Coord, Character> map = new ConcurrentHashMap<>();
 
+        Image(char defaultChar) {
+            this.defaultChar = defaultChar;
+        }
+        
         void setPixel(Coord pixel, char c) {
             map.put(pixel, c);
             if (pixel.x() < minX) {
@@ -60,18 +68,13 @@ public class Day20 {
                 maxY = pixel.y();
             }
         }
-
-        String binaryAreaOf(Coord pixel) {
-            return pixel.area().stream().map(p -> map.getOrDefault(p, DARK).charValue() == LIT ? "1" : "0")
-                    .collect(Collectors.joining());
+        
+        char getPixel(Coord pixel) {
+            return map.getOrDefault(pixel, defaultChar);
         }
-
-        boolean contains(Coord pixel) {
-            return map.containsKey(pixel);
-        }
-
+        
         static Image fromLines(List<String> lines) {
-            Image result = new Image();
+            Image result = new Image('.');
             for (int y = 0; y < lines.size(); ++y) {
                 String line = lines.get(y);
                 for (int x = 0; x < line.length(); ++x) {
@@ -85,67 +88,29 @@ public class Day20 {
     private static class Enhancer {
         private final String enhancerString;
         private Image image;
-        Map<Memo, Character> memory = new ConcurrentHashMap<>();
 
         Enhancer(String enhancerString, Image image) {
             this.enhancerString = enhancerString;
             this.image = image;
         }
-
-        boolean isLit(Coord pixel, int iteration) {
-            if (iteration == 0) {
-                return image.contains(pixel);
-            } else {
-                return Image.LIT == enhancerChar(
-                        pixel.area().stream().map(p -> enhancePosition(p, iteration - 1) == Image.LIT ? "1" : "0")
-                                .collect(Collectors.joining()));
-            }
+        
+        Enhancer enhance() {
+            Image result = new Image(image.defaultChar==Image.LIT?Image.DARK:Image.LIT);
+            IntStream.rangeClosed(image.minX-1, image.maxX+1).mapToObj(Integer::valueOf).flatMap(x->IntStream.rangeClosed(image.minY-1, image.maxY+1).mapToObj(y->new Coord(x,y))).parallel().forEach(coord-> {
+                String s = coord.area().stream().map(c->image.getPixel(c)==Image.DARK?"0":"1").collect(Collectors.joining());
+                char c = enhancerString.charAt(Integer.parseInt(s, 2));
+                result.setPixel(coord, c);
+            });
+            return new Enhancer(enhancerString, result);
         }
-
-        char enhancePosition(Coord pixel, int iteration) {
-            Memo m = new Memo(pixel, iteration);
-            if (memory.containsKey(m)) {
-                return memory.get(m);
-            } else {
-                char ch;
-                if (iteration == 0) {
-                    ch = enhancerChar(image.binaryAreaOf(pixel));
-                } else {
-                    ch = enhancerChar(
-                            pixel.area().stream().map(p -> enhancePosition(p, iteration - 1) == Image.LIT ? "1" : "0")
-                                    .collect(Collectors.joining()));
-                }
-                memory.put(m, ch);
-                return ch;
-            }
-        }
-
-        char enhancerChar(String binary) {
-            return enhancerString.charAt(Integer.parseInt(binary, 2));
-        }
-
-        long countLit(int iteration) {
-            return countLit(iteration, iteration);
-        }
-
-        private long countLit(int extraSpace, int iteration) {
-            return IntStream.range(image.minX - extraSpace, image.maxX + extraSpace + 1).mapToObj(Integer::valueOf)
-                    .flatMap(x -> IntStream.range(image.minY - extraSpace, image.maxY + extraSpace + 1)
-                            .mapToObj(y -> new Coord(x, y)))
-                    .parallel().filter(c -> isLit(c, iteration - 1)).count();
+        
+        long countLit() {
+            return image.map.values().stream().filter(c->c==Image.LIT).count();
         }
 
         static Enhancer fromString(String desc) {
             var descLines = desc.lines().toList();
             return new Enhancer(descLines.get(0), Image.fromLines(descLines.subList(2, descLines.size())));
-        }
-    }
-
-    private static record Memo(Coord pixel, int iteration) implements Comparable<Memo> {
-        private static final Comparator<Memo> MEMO_COMPARATOR = Comparator.comparing(Memo::pixel).thenComparingInt(Memo::iteration);
-        @Override
-        public int compareTo(Memo o) {
-            return MEMO_COMPARATOR.compare(this, o);
         }
     }
 
